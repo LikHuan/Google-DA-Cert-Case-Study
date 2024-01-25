@@ -1,0 +1,388 @@
+---
+title: "Google Case Study 2"
+output:
+  pdf_document: default
+date: "2024-01-17"
+---  
+# ASK
+
+Goal: To analyze the trends of users and how they are using Bellabeat products.
+These trends of participants could be used to approximate trends from other consumers that have similar traits as them (age, gender,height, weight, occupations,etc)
+These trends would reveal patterns among consumers that allows the marketing team to capitalize on emerging trends and market them to an audience of similar backgrounds.
+
+  
+# Prepare
+The data was collected by respondents that willingly participated in a Survey. Consent was ensured for the data collected. A reputable affiliation is present, and this is RTI International. 
+For more information click [here](https://zenodo.org/records/53894#.X9oeh3Uzaao)
+It has a valid license under the name: CC0:Public Domain
+
+# Process
+
+**Cleaning**
+
+I mainly used R and excel to clean the data. This included standardizing the formats, removing duplicates, merging, and adding new columns.
+
+I used R to carry out the majority of the cleaning but I used excel to do some of the cleaning as well. I used excel in some instances due to the convenience of the WEEKDAY function which allowed me to find out what day each date was. I used R to do the rest because R allows me to clean as well as carry out analysis on the dataset.
+
+
+I deemed that only 4 files were necessary for this analysis. The four of which were: dailyActivity_merged, sleepDay_merged,weightLogInfo_merged,hourlySteps_merged.
+
+**Excel**
+File 1: dailyActivity_merged
+File 2: sleepDay_merged
+File 3: weightLogInfo_merged
+File 4: hourlySteps_merged
+
+File 1: dailyActivity_merged
+
+Added a new column titled “Day” to indicate the corresponding day of the ActivityDate. I did this using the WEEKDAY function. 
+
+File 2: sleepDay_merged
+
+Changed the format of the SleepDay to just show the date (m/dd/yyyy).
+Added a new column “Day” with the same purpose as before.
+Added a new column “TimeSpentTryingToSleep” which is the difference between TotalTimeInBed and TotalMinutesAsleep
+
+File 3: weightLogInfo_merged
+Changed the format of the “Date” column to only show date (m/dd/yyyy).
+Added a new column “Day” with the same purpose as before.
+
+File 4: hourlySteps_merged
+Changed the format of the “ActivityHour” column to only show date (m/dd/yyyy).
+Added a new column “Day” with the same purpose as before.
+
+**R**
+
+Loading the libraries and reading the datasets
+```{r warning=FALSE}
+setwd("C:/Users/User/Desktop/R (Google)/Case Study 2/Data")
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(skimr)
+library(janitor)
+
+
+activity= read.csv('Activity.csv')
+sleep= read.csv('Sleep.csv')
+weight= read.csv('Weight.csv')
+hourly_step= read.csv('Hourly_Steps.csv')
+
+```  
+Start cleaning 
+
+**File 1: dailyActivity_merged**
+
+Dropping columns that were not necessary. 
+Finding the number of participants,
+Checking for duplicates (results were 0)
+Changed the no values in “Day” column to actual name of the day
+Renaming the date column to “Date” to standardize naming formats.
+
+**File 2: sleepDay_merged**
+Same as File 1.
+Removed existing duplicates
+
+**File 3: weightLogInfo_merged**
+Same as File 1 but did not change the date column name as it was already “Date”
+
+**File 4: hourlySteps_merged**
+Same as File 1.
+
+```{r warning=FALSE}
+#Cleaning first DF
+#dropped columns that were not useful
+activity=subset(activity, select= c(Id,ActivityDate,Day,TotalSteps,TotalDistance,Calories))
+
+#Finding number of participants
+sum(n_distinct(activity$Id))
+
+#Finding duplicate
+nrow(activity[duplicated(activity), ])
+
+#changing 'day' column to actual name of the day
+
+for (i in 1:nrow(activity)){
+  if (activity[i,3] == 1){
+    activity[i,3] = 'Sunday'
+  }else if (activity[i,3] == 2){
+    activity[i,3] = 'Monday'
+  }else if (activity[i,3] == 3){
+    activity[i,3] = 'Tuesday'
+  }else if (activity[i,3] == 4){
+    activity[i,3] = 'Wednesday'
+  }else if (activity[i,3] == 5){
+    activity[i,3] = 'Thursday'
+  }else if (activity[i,3] == 6){
+    activity[i,3] = 'Friday'
+  }else if (activity[i,3] == 7){
+    activity[i,3] = 'Saturday'
+  }
+}
+#Renaming ActivityDate to Date
+activity= rename(activity, Date= ActivityDate)
+
+#Cleaning 2nd DF
+colnames(sleep)
+
+#Finding duplicate
+nrow(sleep[duplicated(sleep), ])
+sleep = sleep%>% distinct
+nrow(sleep[duplicated(sleep), ])
+
+
+#changing 'day' column to actual name of the day
+
+for (i in 1:nrow(sleep)){
+  if (sleep[i,3] == 1){
+    sleep[i,3] = 'Sunday'
+  }else if (sleep[i,3] == 2){
+    sleep[i,3] = 'Monday'
+  }else if (sleep[i,3] == 3){
+    sleep[i,3] = 'Tuesday'
+  }else if (sleep[i,3] == 4){
+    sleep[i,3] = 'Wednesday'
+  }else if (sleep[i,3] == 5){
+    sleep[i,3] = 'Thursday'
+  }else if (sleep[i,3] == 6){
+    sleep[i,3] = 'Friday'
+  }else if (sleep[i,3] == 7){
+    sleep[i,3] = 'Saturday'
+  }
+}
+
+#Renaming SleepDay to Date
+sleep= rename(sleep,Date=SleepDay)
+colnames(sleep)
+
+#Cleaning 3rd DF
+#dropped columns that were not useful
+colnames(weight)
+weight= subset(weight, select= c(Id, Date, WeightKg, BMI))
+
+#Finding duplicate
+nrow(weight[duplicated(weight), ])
+
+
+#Cleaning 4th DF
+#changing 'Day' column to actual name of the day
+
+for (i in 1:nrow(hourly_step)){
+  if (hourly_step[i,3] == 1){
+    hourly_step[i,3] = 'Sunday'
+  }else if (hourly_step[i,3] == 2){
+    hourly_step[i,3] = 'Monday'
+  }else if (hourly_step[i,3] == 3){
+    hourly_step[i,3] = 'Tuesday'
+  }else if (hourly_step[i,3] == 4){
+    hourly_step[i,3] = 'Wednesday'
+  }else if (hourly_step[i,3] == 5){
+    hourly_step[i,3] = 'Thursday'
+  }else if (hourly_step[i,3] == 6){
+    hourly_step[i,3] = 'Friday'
+  }else if (hourly_step[i,3] == 7){
+    hourly_step[i,3] = 'Saturday'
+  }
+}
+
+#Renaming Activity Hour to Date
+hourly_step= rename(hourly_step,Date=ActivityHour)
+colnames(hourly_step)
+
+#Finding duplicate
+nrow(hourly_step[duplicated(hourly_step), ])
+
+```  
+
+# Analyse
+I analyzed the dataset by first coming up with my own questions. To do this, I looked at the names of the columns and compared them to other columns in my head to find whether a possible connection might be possible. I then test this out by plotting graphs and observing their relationships.
+
+
+File 1: dailyActivity_merged
+File 2: sleepDay_merged
+File 3: weightLogInfo_merged
+File 4: hourlySteps_merged
+
+I started by analyzing the files individually first then I tried merging them. 
+Most of the analysis conducted is split into two trends.
+
+**Overall trend**
+Trend that represents the entire data frame
+**Individual trend**
+Trend that represents a single individual
+
+**File 1: dailyActivity_merged**
+```{r}
+#Start analysis
+
+#Steps taken and date
+ggplot(data=activity)+
+  geom_bar(mapping= aes(x= Date, y= TotalSteps), stat='identity')+
+  labs (title= "The amount of steps taken by Date")+
+  theme_minimal()
+
+#Steps taken and date(Individual)
+ggplot(data=activity)+
+  geom_bar(mapping= aes(x= Date, y= TotalSteps), stat='identity')+
+  labs (title= "The amount of steps taken by Date")+
+  facet_wrap(~Id)+
+  theme_minimal()
+
+#What day has the most steps taken
+ggplot(data = activity) +
+  geom_bar(mapping = aes(x = Day, y = TotalSteps, fill = Day), 
+           stat = "identity")+
+  labs(title= "Steps taken each day")
+
+#What day has the most steps taken(Individual)
+ggplot(data = activity) +
+  geom_bar(mapping = aes(x = Day, y = TotalSteps, fill = Day), 
+           stat = "identity")+
+  facet_wrap(~Id)+
+  labs(title= "Steps taken each day")
+
+#Calories burnt against Date
+ggplot(data = activity) +
+  geom_point(mapping = aes(x = Date, y = Calories), color = 'blue') +
+  labs(title = "Calories burnt against Date", ylab= 'Calories Burnt')
+
+#Calories burnt against Date (Individual)
+ggplot(data = activity) +
+  geom_point(mapping = aes(x = Date, y = Calories), color = 'blue') +
+  geom_line(mapping = aes(x = Date, y = Calories, group = Id), color = 'red') +
+  labs(title = "Calories burnt against Date", ylab = 'Calories Burnt') +
+  facet_wrap(~Id)
+
+#Calories and steps taken
+corr= cor(activity$Calories,activity$TotalSteps)
+corr=round(corr,4)
+
+ggplot(data= activity)+
+  geom_line(mapping= aes(x= Calories, y= TotalSteps), color='orange')+
+  annotate("text", x=4500, y=10000, label= paste("Correlation=",corr), color='black')+
+  labs(title= "TotalSteps against Calories")
+
+#Calories and steps taken (Individual)
+ggplot(data= activity)+
+  geom_line(mapping= aes(x= Calories, y= TotalSteps), color='orange')+
+  labs(title= "TotalSteps against Calories")+
+  facet_wrap(~Id)
+
+
+```
+
+**File 2: sleepDay_merged**
+```{r}
+#Sleep patterns throughout different days
+ggplot(data=sleep) +
+  geom_bar(mapping = aes(x=Day, y= TotalMinutesAsleep, fill=Day), stat='identity')+
+  labs (title= "The amount of sleep per day")
+
+#Sleep patterns throughout different days (Individuals)
+ggplot(data=sleep) +
+  geom_bar(mapping = aes(x=Day, y= TotalMinutesAsleep, fill=Day), stat='identity')+
+  facet_wrap(~Id)+
+  labs (title= "The amount of sleep per day")
+
+```  
+
+**File 3: weightLogInfo_merged**
+```{r}
+#Looking at changes in BMI and Weight over time
+ggplot(weight) +
+  geom_point(mapping = aes(x=Date, y= BMI), color= 'blue')+
+  labs (title= "BMI against Date")
+
+ggplot(weight) +
+  geom_point(mapping = aes(x=Date, y= WeightKg), color= 'blue')+
+  labs (title= "Weight against Date")
+
+#Looking at changes in BMI and Weight over time (Individual)
+ggplot(weight) +
+  geom_point(mapping = aes(x=Date, y= BMI), color= 'red')+
+  geom_line(mapping= aes(x=Date, y= BMI, group= Id), color= 'purple')+
+  facet_wrap(~Id)+
+  labs (title= "BMI against Date")
+
+ggplot(weight) +
+  geom_point(mapping = aes(x=Date, y= WeightKg), color= 'red')+
+  geom_line(mapping= aes(x=Date, y= WeightKg, group= Id), color= 'purple')+
+  facet_wrap(~Id)+
+  labs (title= "Weight against Date")
+
+
+```  
+
+**File 4: hourlySteps_merged**
+```{r}
+#Finding the total steps according to time (hour)
+ggplot(hourly_step)+
+  geom_bar(mapping = aes(x= Hour, y=StepTotal, fill= Hour), stat= 'identity')+
+  labs (title='Total steps Against Hour')
+
+#Finding the total steps according to time (hour) [Individual]
+ggplot(hourly_step)+
+  geom_bar(mapping = aes(x= Hour, y=StepTotal, fill = Hour), stat= 'identity')+
+  facet_wrap(~Id)+
+  labs (title='Total steps Against Hour')
+  
+```
+
+**Merging the files**
+I merged the files and grouped the rows with the same Id and Date together.
+
+```{r}
+merged <- merge(activity,sleep, by = c('Id', 'Date'))
+colnames(merged)
+
+#Checking number of rows
+nrow(activity)
+nrow(sleep)
+nrow(merged)
+
+``` 
+As shown, in the merged there are only 410 rows which are the same as the number of rows in the Sleep dataframe.
+This is because the remaining rows in the activity dataset did not match the Id and Date of the sleep dataframe which resulted in it being dropped.
+
+```{r WARNINGS=FALSE}
+#Checking the calories against time spent trying to sleep
+ggplot(merged)+
+  geom_point(mapping= aes(x=TimeSpentTryingToSleep, y=Calories)) +
+  geom_line(mapping= aes(x=TimeSpentTryingToSleep, y=Calories), color= 'red') + 
+  labs(title= 'TimeSpentTryingToSleep against Calories Burnt')
+
+#Checking the calories against time spent trying to sleep (Individual)
+ggplot(merged)+
+  geom_point(mapping= aes(x=TimeSpentTryingToSleep, y=Calories)) +
+  geom_line(mapping= aes(x=TimeSpentTryingToSleep, y=Calories), color= 'red') +
+  labs(title= 'TimeSpentTryingToSleep against Calories Burnt')+
+  facet_wrap(~Id)
+
+```
+
+Looking at the graph, we know that the calories burnt does not affect the time taken to fall asleep.
+
+# Act
+
+**Findings:**
+The findings are divided into overall and individual insights. 
+Overall:
+Noteworthy trends include the highest steps on Tuesdays, followed closely by Wednesdays and Thursdays. Despite daily activity variations, calories burnt showed no significant change over time. A positive correlation emerged between steps and calorie expenditure.Wednesday stood out as the day when people tend to sleep the most. Surprisingly, no changes were observed in BMI and weight. Peak step times were between 12-2 PM and 5-7 PM. Lastly, calorie expenditure didn't significantly affect the ability to fall asleep.
+
+Individual:
+Step counts varied on specific dates, with some days showing increased steps for each person. Notably, individual trends in calories burnt over time were more pronounced than the overall pattern, revealing variations in calorie expenditure per steps taken. Distinct daily sleep patterns emerged, while a consistent healthy trend was observed in both BMI and weight. Hourly step counts provided insights into individual activity patterns. Lastly, no clear trend was found between calories burnt and time spent trying to sleep.
+
+
+Actions:
+There are 3 options in which we can take at this point.Either use the overall trend and take action, use the individual trend to take action or use both.
+
+**Overall:**
+To enhance overall well-being, align actions with user activity patterns. Identify dates of increased steps and launch a targeted hydration drink, promoting it during these periods. Set reminders on high-activity days to encourage hydration and on days with extended sleep to prevent exhaustion. Prompt users to walk during non-peak hours (12-2 PM and 5-7 PM) for a balanced and sustainable lifestyle, improving circulation. These interventions aim to support users' individual rhythms and contribute to their overall health.
+
+Individual:
+Tailoring actions to individual activity patterns, the system optimizes user health. On days with elevated steps, corresponding special occasions trigger targeted hydration ads. Reminders ensure users stay hydrated, while alerts notify if calorie burn is below a set threshold. The system calculates average calories burned over time and recommends exercise if the target isn't met. Personalized reminders address individual sleep habits, suggesting optimal sleep times and encouraging rest on days with extended sleep. Drastic changes in BMI and weight trigger alerts, prompting exercise and diet recommendations. Individuals are also reminded to walk during their non-peak hours for a balanced and sustainable approach to physical activity.
+
+# Share
+
+I have attached a link to a presentation I made for this project that documents the share process.
+
